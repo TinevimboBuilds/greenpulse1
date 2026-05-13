@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Green Pulse — Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --g900:#071a0e;--g800:#0e2e18;--g700:#165a27;--g600:#1a7533;
+  --g500:#22a045;--g400:#3dc76b;--g300:#72dd97;--g200:#adf0c2;
+  --dark:#040f08;--muted:rgba(255,255,255,0.5);
+  --font:'DM Sans',sans-serif;--r:12px;--r-sm:8px;
+  --pw:393px;--ph:852px;
+}
+body{font-family:var(--font);background:radial-gradient(ellipse at 30% 20%,#0d2a15 0%,#050e07 60%);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 16px 60px;gap:20px;}
+h1.pl{color:var(--g300);font-size:11px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;opacity:0.6;}
+.snav{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;}
+.snav button{font-family:var(--font);font-size:10px;font-weight:500;padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.15s;}
+.snav button.active,.snav button:hover{background:var(--g700);border-color:var(--g400);color:#fff;}
+.phone{width:var(--pw);height:var(--ph);background:#0a0f0b;border-radius:50px;border:1px solid rgba(255,255,255,0.08);box-shadow:0 0 0 8px #050b06,0 40px 100px rgba(0,0,0,0.8),inset 0 0 0 1px rgba(255,255,255,0.03);position:relative;overflow:hidden;}
+.notch{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:110px;height:30px;background:#0a0f0b;border-radius:20px;z-index:200;}
+.swrap{position:absolute;inset:0;border-radius:50px;overflow:hidden;}
+
+/* SCREEN SYSTEM */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;pointer-events:none;opacity:0;transform:translateX(0);}
+.screen.visible{opacity:1;pointer-events:all;}
+.screen.sir{animation:sir 0.38s cubic-bezier(0.32,0.72,0,1) both;}
+.screen.sil{animation:sil 0.38s cubic-bezier(0.32,0.72,0,1) both;}
+.screen.sol{animation:sol 0.38s cubic-bezier(0.32,0.72,0,1) both;}
+.screen.sor{animation:sor 0.38s cubic-bezier(0.32,0.72,0,1) both;}
+@keyframes sir{from{transform:translateX(100%);opacity:1}to{transform:translateX(0);opacity:1}}
+@keyframes sil{from{transform:translateX(-100%);opacity:1}to{transform:translateX(0);opacity:1}}
+@keyframes sol{from{transform:translateX(0);opacity:1}to{transform:translateX(-28%);opacity:0}}
+@keyframes sor{from{transform:translateX(0);opacity:1}to{transform:translateX(28%);opacity:0}}
+
+/* INPUTS */
+.gi{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-sm);padding:13px 16px;color:#fff;font-family:var(--font);font-size:14px;outline:none;margin-bottom:10px;transition:border-color 0.15s;}
+.gi::placeholder{color:rgba(255,255,255,0.28);}
+.gi:focus{border-color:var(--g400);}
+.li{width:100%;background:#f6f6f4;border:1.5px solid #ececea;border-radius:var(--r-sm);padding:13px 16px;font-family:var(--font);font-size:14px;color:#111;outline:none;margin-bottom:10px;transition:border-color 0.15s;appearance:none;}
+.li:focus{border-color:var(--g500);background:#fff;}
+.li::placeholder{color:#aaa;}
+
+/* BUTTONS */
+.gb{width:100%;padding:14px;border-radius:var(--r-sm);border:none;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;transition:transform 0.13s;margin-bottom:10px;}
+.gb:active{transform:scale(0.98);}
+.gbp{background:linear-gradient(135deg,var(--g700),var(--g400));color:#fff;}
+.gbg{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.75);}
+.lb{width:100%;padding:14px;border-radius:var(--r-sm);border:none;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;transition:transform 0.13s;margin-bottom:10px;}
+.lbp{background:linear-gradient(135deg,var(--g700),var(--g400));color:#fff;}
+.lb:active{transform:scale(0.98);}
+
+/* STEP BAR */
+.sb{display:flex;gap:5px;margin-bottom:22px;}
+.sb span{flex:1;height:3px;border-radius:3px;background:#e8e8e6;}
+.sb span.d{background:var(--g500);}
+.fl{font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;margin-top:16px;}
+
+/* BOTTOM NAV */
+.bnav{position:absolute;bottom:0;left:0;right:0;height:82px;background:rgba(4,10,6,0.97);border-top:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-around;padding:0 4px 20px;z-index:10;}
+.ni{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;cursor:pointer;}
+.ni svg{width:22px;height:22px;stroke:rgba(255,255,255,0.28);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.ni p{font-size:10px;color:rgba(255,255,255,0.28);}
+.ni.on svg{stroke:var(--g400);}
+.ni.on p{color:var(--g400);}
+.fab{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--g700),var(--g400));display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 18px rgba(37,161,82,0.4);}
+.fab svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;}
+
+/* ══ S1 SPLASH ══ */
+#s1{background:radial-gradient(ellipse at 50% 38%,#0e2e18 0%,#040c06 68%);align-items:center;justify-content:center;}
+#s1 .tag{color:var(--muted);font-size:13px;text-align:center;line-height:1.65;max-width:230px;margin-bottom:48px;}
+#s1 .bc{width:100%;padding:0 40px;display:flex;flex-direction:column;}
+
+/* ══ S2 LOGIN ══ */
+#s2{background:linear-gradient(170deg,var(--g900) 0%,var(--dark) 55%);padding:72px 32px 36px;}
+#s2 h2{color:#fff;font-size:22px;font-weight:600;margin-bottom:5px;}
+#s2 .sub{color:var(--muted);font-size:13px;line-height:1.55;margin-bottom:26px;}
+.div{display:flex;align-items:center;gap:10px;margin:6px 0 14px;}
+.div span{flex:1;height:1px;background:rgba(255,255,255,0.07);}
+.div p{color:rgba(255,255,255,0.3);font-size:11px;}
+.sr{display:flex;gap:8px;margin-bottom:18px;}
+.sb2{flex:1;padding:11px;border-radius:var(--r-sm);border:1px solid rgba(255,255,255,0.09);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.55);font-family:var(--font);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;}
+.priv{color:rgba(255,255,255,0.3);font-size:11px;text-align:center;line-height:1.65;}
+.priv a{color:var(--g300);text-decoration:none;}
+
+/* ══ S3 REGISTER ══ */
+#s3{background:#fff;padding:72px 28px 32px;overflow-y:auto;}
+#s3 h2{font-size:20px;font-weight:600;color:#111;margin-bottom:4px;}
+#s3 .sub{color:#888;font-size:13px;margin-bottom:20px;}
+.tbox{background:#f0faf4;border:1px solid #c3e8d0;border-radius:var(--r-sm);padding:12px;display:flex;gap:10px;align-items:flex-start;margin:4px 0 16px;transition:border-color 0.2s;}
+.tbox input{margin-top:2px;accent-color:var(--g500);}
+.tbox label{font-size:12px;color:#555;line-height:1.55;}
+.tbox label a{color:var(--g600);}
+.err-shake{animation:shake 0.35s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ══ S4 HOUSEHOLD ══ */
+#s4{background:#fff;padding:68px 28px 28px;overflow-y:auto;}
+#s4 h2{font-size:20px;font-weight:600;color:#111;margin-bottom:4px;}
+#s4 .sub{color:#888;font-size:13px;margin-bottom:18px;}
+.cr{display:flex;align-items:center;gap:14px;}
+.cb{width:38px;height:38px;border-radius:50%;border:1.5px solid #ddd;background:#f5f5f3;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#333;font-family:var(--font);transition:all 0.12s;}
+.cb:hover{border-color:var(--g500);color:var(--g600);}
+.cv{font-size:22px;font-weight:600;color:#111;min-width:32px;text-align:center;}
+.tr{display:flex;gap:8px;margin-top:6px;}
+.to{flex:1;padding:10px 6px;border-radius:var(--r-sm);border:1.5px solid #eee;background:#f5f5f3;font-size:13px;font-weight:500;color:#999;cursor:pointer;text-align:center;transition:all 0.14s;}
+.to.sel{border-color:var(--g400);background:#f0faf4;color:var(--g700);}
+.pnote{display:flex;align-items:center;gap:8px;background:#f0faf4;border:1px solid #c3e8d0;border-radius:var(--r-sm);padding:10px 14px;margin-top:6px;}
+.pnote span{font-size:12px;color:var(--g700);font-weight:500;line-height:1.4;}
+.fbtns{display:flex;gap:10px;margin-top:20px;}
+.bkbtn{flex:1;padding:14px;border-radius:var(--r-sm);border:1.5px solid #ddd;background:#f5f5f3;font-family:var(--font);font-size:14px;font-weight:600;color:#555;cursor:pointer;}
+
+/* ══ S5 CARBON ══ */
+#s5{background:#fff;padding:68px 28px 28px;align-items:center;}
+#s5 h2{font-size:20px;font-weight:600;color:#111;margin-bottom:4px;align-self:flex-start;}
+#s5 .sub{color:#888;font-size:13px;margin-bottom:24px;align-self:flex-start;}
+.gwrap{position:relative;width:188px;height:188px;margin:0 auto 18px;}
+.gwrap svg{width:100%;height:100%;}
+.gcen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.gnum{font-size:36px;font-weight:600;color:#111;line-height:1;transition:all 0.55s ease;}
+.gunit{font-size:11px;color:#888;margin-top:4px;}
+.glbl{font-size:10px;color:#bbb;margin-top:2px;}
+.ebox{background:#f0faf4;border:1px solid #c3e8d0;border-radius:var(--r);padding:14px;width:100%;margin-bottom:18px;}
+.ebox p{font-size:10px;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;}
+.ei{font-size:13px;color:#333;margin-bottom:5px;display:flex;align-items:center;gap:8px;}
+
+/* ══ S6 & S7 HOME ══ */
+#s6,#s7{background:linear-gradient(170deg,var(--g900) 0%,var(--dark) 50%);padding:60px 0 0;}
+.hhdr{padding:0 22px 18px;display:flex;align-items:center;justify-content:space-between;}
+.hg{color:var(--muted);font-size:12px;}
+.hn{color:#fff;font-size:22px;font-weight:600;margin-top:2px;}
+.nib{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;}
+.nib svg{width:18px;height:18px;stroke:rgba(255,255,255,0.55);fill:none;stroke-width:1.8;stroke-linecap:round;}
+.fpc{margin:0 20px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(61,199,107,0.18);border-radius:20px;padding:17px;display:flex;align-items:center;gap:13px;}
+.fpr{width:78px;height:78px;flex-shrink:0;position:relative;}
+.fpr svg{width:100%;height:100%;}
+.fprc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.fpn{font-size:16px;font-weight:600;color:#fff;line-height:1;}
+.fpu{font-size:8px;color:var(--muted);margin-top:2px;}
+.fptag{display:inline-block;background:rgba(61,199,107,0.14);color:var(--g300);font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;margin-bottom:5px;}
+.fpl{color:#fff;font-size:14px;font-weight:500;}
+.fps{color:var(--muted);font-size:11px;margin-top:3px;}
+.hsec{padding:0 20px;margin-bottom:13px;}
+.hst{color:rgba(255,255,255,0.32);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:9px;}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.sc{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r);padding:13px;}
+.si{font-size:16px;margin-bottom:6px;}
+.sn{color:#fff;font-size:17px;font-weight:600;}
+.sl{color:var(--muted);font-size:10px;margin-top:2px;}
+.cr2{display:flex;gap:8px;}
+.ch{flex:1;padding:10px 6px;border-radius:20px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.48);font-family:var(--font);font-size:11px;cursor:pointer;text-align:center;}
+.ch.p{background:linear-gradient(135deg,var(--g700),var(--g500));border-color:var(--g500);color:#fff;font-weight:600;}
+.tp{margin:0 20px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:18px;overflow:hidden;}
+.trow{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:12px;}
+.trow:last-child{border-bottom:none;}
+.tico{width:35px;height:35px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.tico.g{background:rgba(61,199,107,0.13);}
+.tico.a{background:rgba(255,193,7,0.11);}
+.tico.b{background:rgba(100,160,255,0.11);}
+.ttxt p{color:#fff;font-size:13px;font-weight:500;}
+.ttxt span{color:var(--muted);font-size:11px;}
+.tpts{margin-left:auto;background:rgba(61,199,107,0.13);color:var(--g300);font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap;}
+
+/* ══ S8 WASTE CATEGORY ══ */
+#s8{background:linear-gradient(170deg,var(--g900) 0%,var(--dark) 55%);padding:56px 22px 28px;overflow-y:auto;}
+#s8 .whdr{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+#s8 .whdr h2{color:#fff;font-size:20px;font-weight:600;}
+.back-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.back-btn svg{width:16px;height:16px;stroke:rgba(255,255,255,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.wsub{color:rgba(255,255,255,0.45);font-size:12px;margin-bottom:22px;line-height:1.5;}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.cat-card{background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.08);border-radius:16px;padding:18px 14px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:8px;transition:all 0.18s;}
+.cat-card:active{transform:scale(0.97);}
+.cat-card.sel{background:rgba(61,199,107,0.12);border-color:var(--g400);}
+.cat-icon{font-size:28px;line-height:1;}
+.cat-name{color:#fff;font-size:13px;font-weight:600;}
+.cat-co2{color:var(--g300);font-size:10px;font-weight:500;}
+.cat-next{margin-top:18px;width:100%;padding:14px;border-radius:var(--r-sm);border:none;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,var(--g700),var(--g400));color:#fff;opacity:0.35;pointer-events:none;transition:opacity 0.2s;}
+.cat-next.ready{opacity:1;pointer-events:all;}
+
+/* ══ S9 QUANTITY ══ */
+#s9{background:linear-gradient(170deg,var(--g900) 0%,var(--dark) 55%);padding:56px 22px 28px;overflow-y:auto;}
+#s9 .whdr{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+#s9 .whdr h2{color:#fff;font-size:20px;font-weight:600;}
+.qty-cat-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(61,199,107,0.13);border:1px solid rgba(61,199,107,0.25);border-radius:20px;padding:5px 12px;margin-bottom:20px;}
+.qty-cat-pill span{color:var(--g300);font-size:12px;font-weight:600;}
+.qty-label{color:rgba(255,255,255,0.4);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;}
+.qty-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:22px;}
+.qty-opt{background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all 0.18s;}
+.qty-opt.sel{background:rgba(61,199,107,0.1);border-color:var(--g400);}
+.qty-opt:active{transform:scale(0.98);}
+.qty-opt-left{display:flex;flex-direction:column;gap:3px;}
+.qty-opt-name{color:#fff;font-size:14px;font-weight:600;}
+.qty-opt-desc{color:rgba(255,255,255,0.4);font-size:11px;}
+.qty-opt-kg{background:rgba(61,199,107,0.14);color:var(--g300);font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;}
+.qty-co2-preview{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.qty-co2-lbl{color:rgba(255,255,255,0.4);font-size:11px;}
+.qty-co2-val{color:var(--g300);font-size:18px;font-weight:600;}
+.qty-next{width:100%;padding:14px;border-radius:var(--r-sm);border:none;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,var(--g700),var(--g400));color:#fff;opacity:0.35;pointer-events:none;transition:opacity 0.2s;}
+.qty-next.ready{opacity:1;pointer-events:all;}
+
+/* ══ S10 CALCULATING ══ */
+#s10{background:linear-gradient(170deg,var(--g900) 0%,var(--dark) 55%);align-items:center;justify-content:center;padding:40px 28px;}
+.calc-icon{width:72px;height:72px;border-radius:50%;background:rgba(61,199,107,0.12);border:1.5px solid rgba(61,199,107,0.3);display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+.calc-icon svg{width:32px;height:32px;stroke:var(--g300);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+#s10 h2{color:#fff;font-size:20px;font-weight:600;text-align:center;margin-bottom:8px;}
+#s10 .sub{color:rgba(255,255,255,0.45);font-size:13px;text-align:center;line-height:1.6;max-width:260px;}
+.submitted-badge{margin-top:28px;background:rgba(61,199,107,0.1);border:1px solid rgba(61,199,107,0.25);border-radius:12px;padding:12px 20px;display:flex;align-items:center;gap:8px;}
+.submitted-badge svg{width:16px;height:16px;stroke:var(--g300);fill:none;stroke-width:2;flex-shrink:0;}
+.submitted-badge span{color:var(--g300);font-size:12px;font-weight:600;}
+
+/* ══ S11 CARBON FOOTPRINT RESULT ══ */
+#s11{background:#fff;padding:56px 22px 28px;overflow-y:auto;align-items:center;}
+.res-hdr{display:flex;align-items:center;gap:12px;margin-bottom:4px;align-self:flex-start;}
+#s11 h2{font-size:20px;font-weight:600;color:#111;}
+.res-done{background:#f0faf4;border:1px solid #c3e8d0;border-radius:8px;padding:8px 14px;display:flex;align-items:center;gap:6px;align-self:flex-start;margin-bottom:20px;}
+.res-done svg{width:13px;height:13px;stroke:var(--g600);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+.res-done span{color:var(--g700);font-size:11px;font-weight:600;}
+.res-gauge{position:relative;width:160px;height:160px;margin:0 auto 6px;}
+.res-gauge svg{width:100%;height:100%;}
+.res-gcen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.res-num{font-size:32px;font-weight:700;color:#111;line-height:1;}
+.res-unit{font-size:10px;color:#999;margin-top:3px;}
+.res-sub{color:#888;font-size:11px;text-align:center;margin-bottom:16px;}
+.res-pts{background:linear-gradient(135deg,var(--g700),var(--g400));border-radius:12px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:14px;}
+.res-pts-lbl{color:rgba(255,255,255,0.7);font-size:11px;}
+.res-pts-val{color:#fff;font-size:18px;font-weight:700;}
+.res-detail{background:#f6faf7;border:1px solid #ddeee3;border-radius:12px;padding:12px 14px;width:100%;margin-bottom:16px;}
+.res-detail-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #edf5ef;}
+.res-detail-row:last-child{border-bottom:none;}
+.res-detail-row span:first-child{color:#888;font-size:12px;}
+.res-detail-row span:last-child{color:#222;font-size:12px;font-weight:600;}
+.res-btns{width:100%;display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.res-back{width:100%;padding:13px;border-radius:var(--r-sm);border:1.5px solid #ddd;background:#f5f5f3;font-family:var(--font);font-size:14px;font-weight:600;color:#555;cursor:pointer;}
+.res-home{width:100%;padding:13px;border-radius:var(--r-sm);border:none;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,var(--g700),var(--g400));color:#fff;}
+
+/* ══ SHARED REWARDS NAV ══ */
+.rbnav{position:absolute;bottom:0;left:0;right:0;height:82px;background:#fff;border-top:1px solid #ebebea;display:flex;align-items:center;justify-content:space-around;padding:0 4px 20px;z-index:10;}
+.rni{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 10px;cursor:pointer;}
+.rni svg{width:20px;height:20px;stroke:#bbb;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.rni p{font-size:9px;color:#bbb;font-weight:500;}
+.rni.on svg{stroke:var(--g600);}
+.rni.on p{color:var(--g600);}
+.rfab{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--g700),var(--g400));display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(37,161,82,0.35);}
+.rfab svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;}
+
+/* ══ S12 MY REWARDS ══ */
+#s12{background:#fff;display:flex;flex-direction:column;overflow:hidden;}
+.rw-banner{background:linear-gradient(150deg,var(--g800) 0%,var(--g500) 100%);padding:52px 22px 20px;display:flex;flex-direction:column;align-items:center;}
+.rw-logo{margin-bottom:10px;}
+.rw-title{color:#fff;font-size:20px;font-weight:700;text-align:center;margin-bottom:2px;}
+.rw-greeting{color:rgba(255,255,255,0.65);font-size:12px;text-align:center;margin-bottom:16px;}
+.rw-pts-badge{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:6px 16px;display:flex;align-items:center;gap:6px;}
+.rw-pts-badge span{color:#fff;font-size:13px;font-weight:700;}
+.rw-pts-badge small{color:rgba(255,255,255,0.6);font-size:11px;}
+.rw-body{flex:1;overflow-y:auto;padding:18px 20px 90px;}
+.rw-sec-title{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;}
+.rw-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.rw-card{border:1.5px solid #eee;border-radius:14px;padding:16px 14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;transition:all 0.15s;background:#fafafa;}
+.rw-card:active{transform:scale(0.97);}
+.rw-card svg{width:28px;height:28px;stroke:var(--g600);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.rw-card-ico{font-size:26px;}
+.rw-card p{font-size:12px;font-weight:600;color:#222;}
+.rw-card small{font-size:10px;color:#aaa;}
+.rw-pts-bar{background:#f0faf4;border:1px solid #c3e8d0;border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
+.rw-pts-bar span{font-size:13px;font-weight:700;color:#111;}
+.rw-pts-bar small{font-size:11px;color:#888;}
+
+/* ══ S13 REWARDS MARKETPLACE ══ */
+#s13{background:#fff;display:flex;flex-direction:column;overflow:hidden;}
+.mkt-banner{background:linear-gradient(150deg,var(--g800) 0%,var(--g500) 100%);padding:52px 22px 22px;}
+.mkt-banner h2{color:#fff;font-size:22px;font-weight:700;text-align:center;margin-bottom:4px;}
+.mkt-pts-pill{display:flex;align-items:center;justify-content:center;margin-bottom:0;}
+.mkt-pts-pill span{background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:20px;color:#fff;font-size:12px;font-weight:700;padding:5px 14px;}
+.mkt-body{flex:1;overflow-y:auto;padding:16px 20px 90px;}
+.mkt-sec{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;}
+.mkt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.mkt-item{border:1.5px solid #eee;border-radius:14px;overflow:hidden;cursor:pointer;background:#fafafa;transition:all 0.15s;}
+.mkt-item:active{transform:scale(0.97);}
+.mkt-item-img{height:80px;display:flex;align-items:center;justify-content:center;font-size:36px;}
+.mkt-item-img.green{background:linear-gradient(135deg,#e8f5ee,#c3e8d0);}
+.mkt-item-img.gold{background:linear-gradient(135deg,#fff8e1,#ffe082);}
+.mkt-item-info{padding:10px 10px 12px;}
+.mkt-item-info p{font-size:12px;font-weight:600;color:#222;margin-bottom:3px;}
+.mkt-item-info span{font-size:10px;color:var(--g600);font-weight:700;}
+
+/* ══ S14 MISSIONS & CHALLENGES ══ */
+#s14{background:#fff;display:flex;flex-direction:column;overflow:hidden;}
+.mis-banner{background:linear-gradient(150deg,var(--g800) 0%,var(--g500) 100%);padding:52px 22px 22px;text-align:center;}
+.mis-banner h2{color:#fff;font-size:19px;font-weight:700;margin-bottom:4px;}
+.mis-banner p{color:rgba(255,255,255,0.65);font-size:12px;line-height:1.5;}
+.mis-body{flex:1;overflow-y:auto;padding:16px 20px 90px;}
+.mis-sec{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;}
+.mis-card{border:1.5px solid #eee;border-radius:14px;padding:14px;margin-bottom:10px;background:#fafafa;}
+.mis-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.mis-card-ico{width:38px;height:38px;border-radius:10px;background:#e8f5ee;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.mis-card-title{font-size:13px;font-weight:600;color:#111;}
+.mis-card-sub{font-size:11px;color:#888;margin-top:2px;}
+.mis-progress{height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-bottom:6px;}
+.mis-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--g700),var(--g400));}
+.mis-progress-row{display:flex;justify-content:space-between;}
+.mis-progress-row span{font-size:10px;color:#aaa;}
+.mis-progress-row strong{font-size:10px;color:var(--g600);font-weight:700;}
+
+/* ══ S15 GREEN PULSE STATUS ══ */
+#s15{background:#fff;display:flex;flex-direction:column;overflow:hidden;}
+.status-banner{background:linear-gradient(150deg,#fff 0%,#f0faf4 100%);padding:52px 22px 20px;border-bottom:1px solid #eee;}
+.status-banner h2{font-size:18px;font-weight:700;color:#111;margin-bottom:4px;}
+.status-banner p{font-size:12px;color:#888;}
+.status-body{flex:1;overflow-y:auto;padding:20px 20px 90px;}
+.tier-wrap{display:flex;flex-direction:column;align-items:center;padding:10px 0 20px;}
+.trophy{font-size:64px;line-height:1;margin-bottom:8px;filter:drop-shadow(0 4px 14px rgba(200,160,0,0.3));}
+.tier-name{font-size:26px;font-weight:700;color:#111;margin-bottom:4px;}
+.tier-sub{font-size:12px;color:#888;text-align:center;max-width:220px;line-height:1.5;margin-bottom:14px;}
+.tier-progress{width:100%;background:#eee;border-radius:8px;height:10px;overflow:hidden;margin-bottom:6px;}
+.tier-progress-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,#c8a000,#f5c518);}
+.tier-progress-label{display:flex;justify-content:space-between;margin-bottom:18px;}
+.tier-progress-label span{font-size:10px;color:#aaa;}
+.tier-badge{background:#fffbea;border:1.5px solid #ffe082;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.tier-badge-icon{font-size:20px;}
+.tier-badge-text p{font-size:12px;font-weight:600;color:#333;}
+.tier-badge-text span{font-size:11px;color:#888;}
+.tier-next-btn{width:100%;padding:13px;border-radius:var(--r-sm);border:1.5px solid #c8a000;background:#fffbea;font-family:var(--font);font-size:13px;font-weight:600;color:#8a6000;cursor:pointer;}
+
+/* ══ S16 COMMUNITY LEADERBOARD ══ */
+#s16{background:#fff;display:flex;flex-direction:column;overflow:hidden;}
+.lb-banner{background:linear-gradient(150deg,var(--g800) 0%,var(--g500) 100%);padding:52px 22px 22px;text-align:center;}
+.lb-banner h2{color:#fff;font-size:20px;font-weight:700;margin-bottom:4px;}
+.lb-banner p{color:rgba(255,255,255,0.65);font-size:12px;}
+.lb-body{flex:1;overflow-y:auto;padding:16px 20px 90px;}
+.lb-sec{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;}
+.lb-ward-info{background:#f0faf4;border:1px solid #c3e8d0;border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.lb-ward-info span{font-size:12px;color:var(--g700);font-weight:600;}
+.lb-ward-info small{font-size:11px;color:#888;}
+.lb-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;margin-bottom:6px;background:#fafafa;border:1.5px solid #eee;}
+.lb-row.me{background:#f0faf4;border-color:var(--g400);}
+.lb-rank{width:26px;font-size:14px;font-weight:700;color:#aaa;text-align:center;flex-shrink:0;}
+.lb-rank.gold{color:#c8a000;}
+.lb-rank.silver{color:#888;}
+.lb-rank.bronze{color:#b87333;}
+.lb-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--g700),var(--g400));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+.lb-name{flex:1;font-size:13px;font-weight:600;color:#222;}
+.lb-pct{font-size:11px;color:var(--g600);font-weight:700;}
+.lb-avg{background:#f0faf4;border:1px solid #c3e8d0;border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.lb-avg span{font-size:12px;color:var(--g700);font-weight:600;}
+.lb-avg small{font-size:11px;color:#888;}
+.lb-full-btn{width:100%;padding:12px;border-radius:var(--r-sm);border:1.5px solid var(--g400);background:#f0faf4;font-family:var(--font);font-size:13px;font-weight:600;color:var(--g700);cursor:pointer;margin-bottom:10px;}
+.lb-quick-log{width:100%;padding:12px;border-radius:var(--r-sm);border:none;background:linear-gradient(135deg,var(--g700),var(--g400));font-family:var(--font);font-size:13px;font-weight:600;color:#fff;cursor:pointer;}
+
+/* ══ ADMIN / PROFILE SCREENS (S17–S20) ══ */
+#s17,#s18,#s19,#s20{background:#fff;display:flex;flex-direction:column;overflow:hidden;}
+.adm-hero{background:linear-gradient(155deg,var(--g800) 0%,var(--g500) 100%);padding:50px 22px 28px;border-bottom-left-radius:28px;border-bottom-right-radius:28px;display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;position:relative;}
+.adm-hero h2{font-size:18px;font-weight:700;letter-spacing:0.5px;margin-top:6px;}
+.adm-hero p{font-size:11px;opacity:0.8;margin-top:3px;}
+.adm-back{position:absolute;left:18px;top:52px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.adm-back svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+.adm-body{flex:1;overflow-y:auto;padding:22px 22px 100px;}
+
+/* S17 profile menu */
+.pf-logo{width:72px;height:72px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;margin:6px auto 10px;box-shadow:0 6px 20px rgba(0,0,0,0.15);}
+.pf-title{font-size:14px;font-weight:700;color:#111;text-align:center;letter-spacing:0.5px;margin:8px 0 4px;}
+.pf-sub{font-size:11px;color:#888;text-align:center;margin-bottom:18px;}
+.pf-list{display:flex;flex-direction:column;gap:1px;background:#eee;border-radius:14px;overflow:hidden;border:1px solid #eee;}
+.pf-row{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;background:#fff;cursor:pointer;transition:background 0.15s;}
+.pf-row:hover{background:#f8faf8;}
+.pf-row span{font-size:13px;font-weight:500;color:#222;}
+.pf-row svg{width:14px;height:14px;stroke:#bbb;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.pf-row.danger span{color:#c53030;}
+
+/* S18 account info */
+.acc-avatar{width:78px;height:78px;border-radius:50%;background:linear-gradient(135deg,var(--g700),var(--g400));display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;font-weight:700;margin:0 auto 8px;border:3px solid #fff;box-shadow:0 6px 20px rgba(0,0,0,0.12);}
+.acc-name{font-size:15px;font-weight:700;color:#111;text-align:center;margin-bottom:18px;}
+.acc-field{background:#f6f6f4;border:1.5px solid #ececea;border-radius:12px;padding:11px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.acc-field-ico{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--g700),var(--g400));display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.acc-field-ico svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.acc-field-body{flex:1;display:flex;flex-direction:column;}
+.acc-field-lbl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.06em;}
+.acc-field-val{font-size:13px;color:#222;font-weight:600;}
+.acc-field-tag{background:rgba(61,199,107,0.18);color:var(--g700);font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;}
+.adm-cta{width:100%;padding:14px;border-radius:var(--r-sm);border:none;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--g700),var(--g400));color:#fff;margin-top:14px;letter-spacing:0.5px;}
+
+/* S19 notifications */
+.nt-card{background:#fafafa;border:1.5px solid #eee;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.nt-ico{width:38px;height:38px;border-radius:10px;background:#e8f5ee;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.nt-body{flex:1;}
+.nt-title{font-size:13px;font-weight:600;color:#111;}
+.nt-desc{font-size:11px;color:#888;margin-top:2px;}
+.nt-toggle{width:38px;height:22px;border-radius:20px;background:var(--g500);position:relative;cursor:pointer;flex-shrink:0;transition:background 0.18s;}
+.nt-toggle::after{content:'';position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:all 0.18s;}
+.nt-toggle.off{background:#ddd;}
+.nt-toggle.off::after{right:auto;left:2px;}
+.nt-times-lbl{font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.08em;margin:14px 0 8px;}
+.nt-times-select{width:100%;background:#f6f6f4;border:1.5px solid #ececea;border-radius:12px;padding:12px 14px;font-family:var(--font);font-size:13px;color:#222;outline:none;}
+
+/* S20 locations */
+.loc-card{background:#fafafa;border:1.5px solid #eee;border-radius:14px;padding:14px;margin-bottom:12px;}
+.loc-lbl{font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+.loc-val{font-size:14px;font-weight:700;color:#111;margin-bottom:8px;}
+.loc-map{height:90px;border-radius:10px;background:linear-gradient(135deg,#e3efe6,#c3e8d0);display:flex;align-items:center;justify-content:center;color:var(--g700);font-size:11px;font-weight:600;margin-bottom:8px;position:relative;overflow:hidden;}
+.loc-map::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.4) 1px,transparent 1px);background-size:20px 20px;}
+.loc-map svg{width:20px;height:20px;stroke:var(--g600);fill:none;stroke-width:2;margin-right:6px;z-index:1;}
+.loc-map span{z-index:1;}
+.loc-row{display:flex;align-items:center;justify-content:space-between;}
+.loc-change{color:var(--g600);font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline;}
+.loc-freq{display:flex;gap:6px;}
+.loc-freq-pill{flex:1;padding:8px;border-radius:10px;border:1.5px solid #eee;background:#fff;font-size:11px;font-weight:600;color:#888;text-align:center;cursor:pointer;}
+.loc-freq-pill.sel{background:#f0faf4;border-color:var(--g400);color:var(--g700);}
+.loc-suburbs{font-size:12px;color:#444;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<h1 class="pl">Green Pulse · SA Prototype</h1>
+
+<div class="snav">
+  <button class="active" onclick="goTo(1)">1 · Splash</button>
+  <button onclick="goTo(2)">2 · Login</button>
+  <button onclick="goTo(3)">3 · Register</button>
+  <button onclick="goTo(4)">4 · Household</button>
+  <button onclick="goTo(5)">5 · Carbon Est.</button>
+  <button onclick="goTo(6)">6 · Home</button>
+  <button onclick="goTo(7)">7 · Tips</button>
+  <button onclick="goTo(8)">8 · Waste Cat.</button>
+  <button onclick="goTo(9)">9 · Quantity</button>
+  <button onclick="goTo(10)">10 · Calc.</button>
+  <button onclick="goTo(11)">11 · Carbon F.</button>
+  <button onclick="goTo(12)">12 · My Rewards</button>
+  <button onclick="goTo(13)">13 · Marketplace</button>
+  <button onclick="goTo(14)">14 · Missions</button>
+  <button onclick="goTo(15)">15 · GP Status</button>
+  <button onclick="goTo(16)">16 · Leaderboard</button>
+  <button onclick="goTo(17)">17 · Profile</button>
+  <button onclick="goTo(18)">18 · Account</button>
+  <button onclick="goTo(19)">19 · Notifications</button>
+  <button onclick="goTo(20)">20 · Locations</button>
+</div>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="swrap">
+
+    <!-- ══ SCREEN 1: SPLASH ══ -->
+    <div id="s1" class="screen visible" style="padding:0;">
+      <div onclick="goTo(2)" style="cursor:pointer;flex:1;width:100%;position:relative;overflow:hidden;background:radial-gradient(ellipse at 30% 20%, #1f6b3a 0%, #0d4a23 40%, #062815 100%);display:flex;align-items:center;justify-content:center;">
+        <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid meet" style="position:absolute;inset:0;width:100%;height:100%;">
+          <defs>
+            <radialGradient id="gpGlow" cx="30%" cy="20%" r="80%">
+              <stop offset="0%" stop-color="#2a8a4a" stop-opacity="0.6"/>
+              <stop offset="60%" stop-color="#0d4a23" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <rect width="400" height="600" fill="url(#gpGlow)"/>
+          <g transform="translate(200 300) rotate(-30)">
+            <ellipse cx="0" cy="0" rx="160" ry="55" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0.95"/>
+            <g fill="#ffffff">
+              <polygon points="0,-58 4,-55 0,-52 -4,-55"/>
+              <polygon points="0,58 4,55 0,52 -4,55"/>
+              <polygon points="158,2 162,0 158,-2 154,0" transform="rotate(180)"/>
+            </g>
+          </g>
+          <text x="200" y="312" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="800" font-size="34" letter-spacing="2" fill="#ffffff">GREEN PULSE</text>
+        </svg>
+        <div style="position:absolute;bottom:32px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:2px;font-family:Helvetica,Arial,sans-serif;">TAP TO CONTINUE</div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 2: LOGIN ══ -->
+    <div id="s2" class="screen" style="padding:0;background:#ffffff;">
+      <!-- Green hero with orbit/wordmark -->
+      <div style="width:100%;height:38%;position:relative;overflow:hidden;border-bottom-left-radius:18px;border-bottom-right-radius:18px;background:radial-gradient(ellipse at 30% 20%, #1f6b3a 0%, #0d4a23 55%, #062815 100%);display:flex;align-items:center;justify-content:center;">
+        <svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMid meet" style="position:absolute;inset:0;width:100%;height:100%;">
+          <g transform="translate(200 120) rotate(-30)">
+            <ellipse cx="0" cy="0" rx="120" ry="40" fill="none" stroke="#ffffff" stroke-width="1.1" opacity="0.95"/>
+            <g fill="#ffffff">
+              <polygon points="0,-42 3,-40 0,-38 -3,-40"/>
+              <polygon points="0,42 3,40 0,38 -3,40"/>
+            </g>
+          </g>
+          <text x="200" y="130" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="800" font-size="22" letter-spacing="2" fill="#ffffff">GREEN PULSE</text>
+        </svg>
+      </div>
+
+      <!-- White card content -->
+      <div style="flex:1;width:100%;padding:18px 22px 16px;display:flex;flex-direction:column;font-family:Helvetica,Arial,sans-serif;color:#0d2818;">
+        <h2 style="margin:6px 0 4px;font-size:18px;font-weight:800;text-align:center;">Welcome to Green Pulse</h2>
+        <p style="margin:0 0 14px;font-size:11px;text-align:center;color:#4a4a4a;">Your journey to sustainable waste starts here</p>
+
+        <input type="text" placeholder="Username/Email Address" style="width:100%;padding:11px 16px;border:1px solid #d4d4d4;border-radius:24px;font-size:12px;margin-bottom:8px;outline:none;background:#fff;"/>
+        <input type="password" placeholder="Password" style="width:100%;padding:11px 16px;border:1px solid #d4d4d4;border-radius:24px;font-size:12px;margin-bottom:10px;outline:none;background:#fff;"/>
+
+        <button onclick="doLogin()" style="width:100%;padding:11px;border:none;border-radius:24px;background:#1f8a3a;color:#fff;font-weight:800;font-size:13px;letter-spacing:1px;cursor:pointer;margin-bottom:8px;">LOGIN</button>
+        <button onclick="goTo(3)" style="width:100%;padding:10px;border:1.5px solid #1f8a3a;border-radius:24px;background:#fff;color:#1f8a3a;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;margin-bottom:12px;">CREATE ACCOUNT</button>
+
+        <div style="display:flex;align-items:center;gap:8px;margin:2px 0 10px;">
+          <div style="flex:1;height:1px;background:#1f8a3a;opacity:0.5;"></div>
+          <span style="font-size:10px;color:#4a4a4a;">Or sign up with</span>
+          <div style="flex:1;height:1px;background:#1f8a3a;opacity:0.5;"></div>
+        </div>
+
+        <div style="display:flex;justify-content:center;gap:18px;margin-bottom:12px;">
+          <button onclick="doLogin()" aria-label="Google" style="width:38px;height:38px;border-radius:50%;border:1px solid #e0e0e0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          </button>
+          <button onclick="doLogin()" aria-label="Apple" style="width:38px;height:38px;border-radius:50%;border:1px solid #e0e0e0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#000"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+          </button>
+        </div>
+
+        <p style="margin:auto 0 0;text-align:center;font-size:10px;color:#4a4a4a;">View our <a href="#" style="color:#1f8a3a;text-decoration:underline;font-weight:600;">POPIA Privacy Policy</a></p>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 3: REGISTER ══ -->
+    <div id="s3" class="screen">
+      <h2>Account Creation</h2>
+      <p class="sub">Let's set up your profile</p>
+      <input class="li" type="text"  placeholder="Full Name"       id="reg-name">
+      <input class="li" type="email" placeholder="Email Address"   id="reg-email">
+      <input class="li" type="password" placeholder="Password"     id="reg-pass">
+      <input class="li" type="password" placeholder="Confirm Password">
+      <div class="tbox" id="terms-wrap">
+        <input type="checkbox" id="tc">
+        <label for="tc">I consent to data collection for carbon footprint calculations, in compliance with <a href="#">POPIA</a>.</label>
+      </div>
+      <div style="margin-top:auto;">
+        <button class="lb lbp" onclick="doRegister()">NEXT</button>
+        <p style="font-size:11px;color:#aaa;text-align:center;">View our <a href="#" style="color:var(--g600);">POPIA Privacy Policy</a></p>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 4: HOUSEHOLD ══ -->
+    <div id="s4" class="screen">
+      <div class="sb"><span class="d"></span><span class="d"></span><span></span><span></span></div>
+      <h2>Setup Your Household</h2>
+      <p class="sub">Personalise your carbon baseline.</p>
+
+      <p class="fl">Household members</p>
+      <div class="cr">
+        <button class="cb" onclick="chg(-1)">−</button>
+        <span class="cv" id="hc">2</span>
+        <button class="cb" onclick="chg(1)">+</button>
+        <span style="font-size:12px;color:#aaa;margin-left:4px;">people</span>
+      </div>
+
+      <p class="fl">Province</p>
+      <select class="li" id="prov" onchange="onProv()" style="margin-top:0;">
+        <option value="">— Select your province —</option>
+        <option>Eastern Cape</option>
+        <option>Free State</option>
+        <option>Gauteng</option>
+        <option>KwaZulu-Natal</option>
+        <option>Limpopo</option>
+        <option>Mpumalanga</option>
+        <option>Northern Cape</option>
+        <option>North West</option>
+        <option>Western Cape</option>
+      </select>
+      <div class="pnote" id="pnote" style="display:none;">
+        <span>📍</span><span id="ptxt"></span>
+      </div>
+
+      <p class="fl">Data collection frequency</p>
+      <div class="tr">
+        <div class="to sel" onclick="selTog(this,'weekly')">Weekly</div>
+        <div class="to"     onclick="selTog(this,'biweekly')">Bi-weekly</div>
+        <div class="to"     onclick="selTog(this,'other')">Other</div>
+      </div>
+
+      <div class="fbtns">
+        <button class="bkbtn" onclick="goTo(3)">BACK</button>
+        <button class="lb lbp" style="flex:2;margin-bottom:0;" onclick="goTo(5)">NEXT</button>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 5: CARBON ESTIMATE ══ -->
+    <div id="s5" class="screen">
+      <div class="sb"><span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span></div>
+      <h2>Baseline Carbon Estimate</h2>
+      <p class="sub" id="s5-sub">Based on your household size &amp; province.</p>
+
+      <div class="gwrap">
+        <svg viewBox="0 0 188 188" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="gg" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#165a27"/>
+              <stop offset="100%" stop-color="#3dc76b"/>
+            </linearGradient>
+          </defs>
+          <circle cx="94" cy="94" r="75" fill="none" stroke="#e8f5ee" stroke-width="13"/>
+          <circle id="garc" cx="94" cy="94" r="75" fill="none"
+            stroke="url(#gg)" stroke-width="13"
+            stroke-dasharray="340 471" stroke-dashoffset="0"
+            stroke-linecap="round" transform="rotate(-90 94 94)"/>
+        </svg>
+        <div class="gcen">
+          <span class="gnum" id="gnum">1.25</span>
+          <span class="gunit">Tonnes CO₂e</span>
+          <span class="glbl">/ Year</span>
+        </div>
+      </div>
+
+
+      <div style="margin-top:auto;width:100%;">
+        <button class="lb lbp" onclick="goTo(8)">LOG NEW WASTE ENTRY →</button>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 6: HOME / EMISSION SUMMARY ══ -->
+    <div id="s6" class="screen">
+      <div class="hhdr">
+        <div>
+          <p class="hg">Emission Summary</p>
+          <p class="hn" id="hn6">Good morning 👋</p>
+        </div>
+        <div class="nib">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        </div>
+      </div>
+
+      <!-- Total emission card -->
+      <div class="fpc">
+        <div class="fpr">
+          <svg viewBox="0 0 78 78">
+            <circle cx="39" cy="39" r="31" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/>
+            <circle id="sum-arc" cx="39" cy="39" r="31" fill="none" stroke="url(#fg1)" stroke-width="7"
+              stroke-dasharray="0 195" stroke-dashoffset="-50" stroke-linecap="round"/>
+            <defs><linearGradient id="fg1" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1a5c27"/><stop offset="100%" stop-color="#3dc76b"/></linearGradient></defs>
+          </svg>
+          <div class="fprc"><span class="fpn" id="sum-total">0</span><span class="fpu">kg CO₂e</span></div>
+        </div>
+        <div>
+          <span class="fptag" id="sum-entries-tag">0 entries logged</span>
+          <p class="fpl">Total CO₂ Logged</p>
+          <p class="fps" id="sum-pts-line">🌱 0 Green Points earned</p>
+        </div>
+      </div>
+
+      <!-- Per-category breakdown -->
+      <div class="hsec">
+        <p class="hst">Breakdown by category</p>
+        <div class="sg" id="sum-breakdown">
+          <div class="sc" style="grid-column:1/-1;text-align:center;padding:20px;">
+            <p style="color:rgba(255,255,255,0.3);font-size:12px;">No entries yet.<br>Tap + to log your first waste entry.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Log history list -->
+      <div class="hsec" id="sum-history-wrap" style="display:none;">
+        <p class="hst">Recent logs</p>
+        <div class="tp" id="sum-history"></div>
+      </div>
+
+      <div class="bnav">
+        <div class="ni on"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><p>Home</p></div>
+        <div class="ni"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p>Insights</p></div>
+        <div class="fab" onclick="goTo(8)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="ni" onclick="goTo(12)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5 3.19-6.98 4.8-9.14 4.8"/></svg><p>Rewards</p></div>
+        <div class="ni" onclick="goTo(17)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p>Profile</p></div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 7: HOME + TIPS ══ -->
+    <div id="s7" class="screen">
+      <div class="hhdr">
+        <div>
+          <p class="hg">Weekly Footprint</p>
+          <p class="hn" id="hn7">Good morning 👋</p>
+        </div>
+        <div class="nib">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        </div>
+      </div>
+
+      <div class="fpc" style="margin-bottom:12px;">
+        <div class="fpr">
+          <svg viewBox="0 0 78 78">
+            <circle cx="39" cy="39" r="31" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/>
+            <circle cx="39" cy="39" r="31" fill="none" stroke="url(#fg2)" stroke-width="7"
+              stroke-dasharray="130 195" stroke-dashoffset="-50" stroke-linecap="round"/>
+            <defs><linearGradient id="fg2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1a5c27"/><stop offset="100%" stop-color="#3dc76b"/></linearGradient></defs>
+          </svg>
+          <div class="fprc"><span class="fpn">25.1</span><span class="fpu">kg CO₂e</span></div>
+        </div>
+        <div>
+          <span class="fptag">↓ 12% vs last week</span>
+          <p class="fpl">Weekly Footprint</p>
+          <p class="fps">🌱 10 pts earned today</p>
+        </div>
+      </div>
+
+      <div class="hsec"><p class="hst">Suggested actions</p></div>
+
+      <div class="tp">
+        <div class="trow"><div class="tico g">♻️</div><div class="ttxt"><p>Try recycling "Everyday" activity</p><span>Reduce household waste · Low effort</span></div><span class="tpts">+5 pts</span></div>
+        <div class="trow"><div class="tico a">🚌</div><div class="ttxt"><p>Take public transport this week</p><span>Saves ~2.1 kg CO₂e · Medium</span></div><span class="tpts">+8 pts</span></div>
+        <div class="trow"><div class="tico b">💡</div><div class="ttxt"><p>Switch to LED lighting at home</p><span>One-time change · High impact</span></div><span class="tpts">+12 pts</span></div>
+        <div class="trow"><div class="tico g">🥗</div><div class="ttxt"><p>Try one meat-free day this week</p><span>Saves ~1.4 kg CO₂e · Low effort</span></div><span class="tpts">+6 pts</span></div>
+      </div>
+
+      <div class="bnav">
+        <div class="ni" onclick="goTo(6)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><p>Home</p></div>
+        <div class="ni"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p>Insights</p></div>
+        <div class="fab" onclick="goTo(8)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="ni on" onclick="goTo(12)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5 3.19-6.98 4.8-9.14 4.8"/></svg><p>Rewards</p></div>
+        <div class="ni" onclick="goTo(17)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p>Profile</p></div>
+      </div>
+    </div>
+
+
+    <!-- ══ SCREEN 8: WASTE CATEGORY ══ -->
+    <div id="s8" class="screen">
+      <div class="whdr">
+        <div class="back-btn" onclick="goTo(6)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <h2>Log New Waste Entry</h2>
+      </div>
+      <p class="wsub">Select the type of waste you're logging to calculate its carbon impact.</p>
+      <p class="qty-label" style="margin-bottom:12px;">1. Select Category</p>
+      <div class="cat-grid">
+        <div class="cat-card" onclick="selCat(this,'Plastic','♻️',2.0)" id="cat-plastic">
+          <span class="cat-icon">♻️</span>
+          <span class="cat-name">Plastic</span>
+          <span class="cat-co2">2.0 kg CO₂/kg</span>
+        </div>
+        <div class="cat-card" onclick="selCat(this,'Mixed (MSW)','🗑️',1.2)" id="cat-mixed">
+          <span class="cat-icon">🗑️</span>
+          <span class="cat-name">Mixed (MSW)</span>
+          <span class="cat-co2">1.2 kg CO₂/kg</span>
+        </div>
+        <div class="cat-card" onclick="selCat(this,'Organic','🌿',0.6)" id="cat-organic">
+          <span class="cat-icon">🌿</span>
+          <span class="cat-name">Organic</span>
+          <span class="cat-co2">0.6 kg CO₂/kg</span>
+        </div>
+        <div class="cat-card" onclick="selCat(this,'Paper','📄',0.7)" id="cat-paper">
+          <span class="cat-icon">📄</span>
+          <span class="cat-name">Paper</span>
+          <span class="cat-co2">0.7 kg CO₂/kg</span>
+        </div>
+      </div>
+      <button class="cat-next" id="cat-next-btn" onclick="goTo(9)">SET QUANTITY →</button>
+    </div>
+
+    <!-- ══ SCREEN 9: SET QUANTITY ══ -->
+    <div id="s9" class="screen">
+      <div class="whdr">
+        <div class="back-btn" onclick="goTo(8)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <h2>Set Quantity</h2>
+      </div>
+      <div class="qty-cat-pill" id="qty-pill"><span id="qty-cat-label">♻️ Plastic</span></div>
+      <p class="qty-label">2. Set Quantity</p>
+      <div class="qty-opts">
+        <div class="qty-opt" onclick="selQty(this,'Small',5)" id="qty-small">
+          <div class="qty-opt-left">
+            <span class="qty-opt-name">Small</span>
+            <span class="qty-opt-desc">e.g. a grocery bag</span>
+          </div>
+          <span class="qty-opt-kg">5 kg</span>
+        </div>
+        <div class="qty-opt" onclick="selQty(this,'Medium',25)" id="qty-medium">
+          <div class="qty-opt-left">
+            <span class="qty-opt-name">Medium</span>
+            <span class="qty-opt-desc">e.g. a recycling bin</span>
+          </div>
+          <span class="qty-opt-kg">25 kg</span>
+        </div>
+        <div class="qty-opt" onclick="selQty(this,'Large',100)" id="qty-large">
+          <div class="qty-opt-left">
+            <span class="qty-opt-name">Large</span>
+            <span class="qty-opt-desc">e.g. a full collection</span>
+          </div>
+          <span class="qty-opt-kg">100 kg</span>
+        </div>
+      </div>
+      <div class="qty-co2-preview">
+        <span class="qty-co2-lbl">Estimated CO₂ emission</span>
+        <span class="qty-co2-val" id="qty-co2-preview">— kg</span>
+      </div>
+      <button class="qty-next" id="qty-next-btn" onclick="submitEntry()">CALCULATE IMPACT →</button>
+    </div>
+
+    <!-- ══ SCREEN 10: CALCULATING / SUBMITTED ══ -->
+    <div id="s10" class="screen">
+      <div class="calc-icon">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2>Entry Submitted</h2>
+      <p class="sub">Your waste entry has been recorded. We're calculating the carbon footprint now.</p>
+      <div class="submitted-badge">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>Entry Submitted</span>
+      </div>
+      <button style="margin-top:32px;width:100%;padding:14px;border-radius:8px;border:none;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,var(--g700),var(--g400));color:#fff;" onclick="showResult()">VIEW CARBON FOOTPRINT →</button>
+    </div>
+
+    <!-- ══ SCREEN 11: CARBON FOOTPRINT RESULT ══ -->
+    <div id="s11" class="screen">
+      <div class="res-hdr">
+        <div class="back-btn" onclick="goTo(8)" style="background:#f0faf4;border-color:#c3e8d0;"><svg viewBox="0 0 24 24" style="stroke:var(--g600);"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <h2>Carbon Footprint</h2>
+      </div>
+      <div class="res-done">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>Calculation complete · Entry Submitted</span>
+      </div>
+      <div class="res-gauge">
+        <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#165a27"/><stop offset="100%" stop-color="#3dc76b"/></linearGradient></defs>
+          <circle cx="80" cy="80" r="62" fill="none" stroke="#e8f5ee" stroke-width="11"/>
+          <circle id="res-arc" cx="80" cy="80" r="62" fill="none" stroke="url(#rg)" stroke-width="11"
+            stroke-dasharray="200 390" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 80 80)"/>
+        </svg>
+        <div class="res-gcen">
+          <span class="res-num" id="res-num">3.2</span>
+          <span class="res-unit">kg CO₂e</span>
+        </div>
+      </div>
+      <p class="res-sub" id="res-sub">Reduction logged</p>
+      <div class="res-pts">
+        <span class="res-pts-lbl">Green Points Earned</span>
+        <span class="res-pts-val" id="res-pts">+5 Green Points</span>
+      </div>
+      <div class="res-detail">
+        <div class="res-detail-row"><span>Waste Type</span><span id="rd-type">Plastic</span></div>
+        <div class="res-detail-row"><span>Quantity</span><span id="rd-qty">5 kg (Small)</span></div>
+        <div class="res-detail-row"><span>CO₂ Factor</span><span id="rd-factor">2.0 kg CO₂/kg</span></div>
+        <div class="res-detail-row"><span>Total Emission</span><span id="rd-total">10.0 kg CO₂e</span></div>
+      </div>
+      <div class="res-btns">
+        <button class="res-home" onclick="goTo(6)">BACK TO SUMMARY</button>
+        <button class="res-back" onclick="goTo(8)">LOG ANOTHER ENTRY</button>
+      </div>
+    </div>
+
+
+    <!-- ══ SCREEN 12: MY REWARDS ══ -->
+    <div id="s12" class="screen">
+      <div class="rw-banner">
+        <svg width="80" height="32" viewBox="0 0 180 72" xmlns="http://www.w3.org/2000/svg" class="rw-logo">
+          <ellipse cx="90" cy="36" rx="84" ry="32" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+          <circle cx="90" cy="4" r="3.8" fill="#3dc76b" opacity="0.9"/>
+          <text x="36" y="31" font-family="DM Sans,sans-serif" font-size="14" font-weight="600" fill="#ffffff" letter-spacing="2.5">GREEN</text>
+          <circle cx="90" cy="40" r="4.5" fill="#3dc76b"/><circle cx="90" cy="40" r="2" fill="#071a0e"/>
+          <text x="97" y="47" font-family="DM Sans,sans-serif" font-size="14" font-weight="600" fill="#ffffff" letter-spacing="2.5">PULSE</text>
+        </svg>
+        <p class="rw-title">My Rewards</p>
+        <p class="rw-greeting" id="rw-greeting">Hello!</p>
+        <div class="rw-pts-badge">
+          <span id="rw-pts-display">0</span>
+          <small>Green Points</small>
+        </div>
+      </div>
+      <div class="rw-body">
+        <p class="rw-sec-title">Explore Rewards</p>
+        <div class="rw-grid">
+          <div class="rw-card" onclick="goTo(13)">
+            <span class="rw-card-ico">🏪</span>
+            <p>Marketplace</p>
+            <small>Redeem points</small>
+          </div>
+          <div class="rw-card" onclick="goTo(14)">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <p>Active Missions &amp; Challenges</p>
+            <small>Track progress</small>
+          </div>
+          <div class="rw-card" onclick="goTo(15)">
+            <span class="rw-card-ico">🏆</span>
+            <p>My Status</p>
+            <small>View tier</small>
+          </div>
+          <div class="rw-card" onclick="goTo(16)">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            <p>Community Leaderboard</p>
+            <small>Ward rankings</small>
+          </div>
+        </div>
+        <div class="rw-pts-bar">
+          <div><p style="font-size:11px;color:#888;margin-bottom:2px;">Points Balance</p><span id="rw-pts-bar-val">0 pts</span></div>
+          <small>Earn more by logging waste</small>
+        </div>
+      </div>
+      <div class="rbnav">
+        <div class="rni" onclick="goTo(6)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><p>Home</p></div>
+        <div class="rni" onclick="goTo(8)"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><p>Log</p></div>
+        <div class="rfab" onclick="goTo(8)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="rni on"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5 3.19-6.98 4.8-9.14 4.8"/></svg><p>Rewards</p></div>
+        <div class="rni" onclick="goTo(17)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p>Profile</p></div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 13: REWARDS MARKETPLACE ══ -->
+    <div id="s13" class="screen">
+      <div class="mkt-banner">
+        <h2>Rewards Marketplace</h2>
+        <div class="mkt-pts-pill"><span id="mkt-pts">Points Balance: 0</span></div>
+      </div>
+      <div class="mkt-body">
+        <p class="mkt-sec">Browse Rewards Marketplace</p>
+        <div class="mkt-grid">
+          <div class="mkt-item">
+            <div class="mkt-item-img green">🌱</div>
+            <div class="mkt-item-info"><p>Tree Planting</p><span>500 pts</span></div>
+          </div>
+          <div class="mkt-item">
+            <div class="mkt-item-img gold">🎁</div>
+            <div class="mkt-item-info"><p>Eco Gift Voucher</p><span>750 pts</span></div>
+          </div>
+          <div class="mkt-item">
+            <div class="mkt-item-img green">♻️</div>
+            <div class="mkt-item-info"><p>Recycling Kit</p><span>300 pts</span></div>
+          </div>
+          <div class="mkt-item">
+            <div class="mkt-item-img gold">🏛️</div>
+            <div class="mkt-item-info"><p>Municipal Credit</p><span>1,000 pts</span></div>
+          </div>
+        </div>
+        <p class="mkt-sec">Special Municipal Rebates</p>
+        <div class="mkt-grid">
+          <div class="mkt-item">
+            <div class="mkt-item-img green" style="background:linear-gradient(135deg,#e8f5ee,#adf0c2);">🚰</div>
+            <div class="mkt-item-info"><p>Water Rebate</p><span>Early access</span></div>
+          </div>
+          <div class="mkt-item">
+            <div class="mkt-item-img gold" style="background:linear-gradient(135deg,#fff3e0,#ffcc80);">⚡</div>
+            <div class="mkt-item-info"><p>Energy Discount</p><span>Early access</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="rbnav">
+        <div class="rni" onclick="goTo(6)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><p>Home</p></div>
+        <div class="rni" onclick="goTo(8)"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><p>Log</p></div>
+        <div class="rfab" onclick="goTo(8)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="rni on" onclick="goTo(12)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5 3.19-6.98 4.8-9.14 4.8"/></svg><p>Rewards</p></div>
+        <div class="rni" onclick="goTo(17)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p>Profile</p></div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 14: MISSIONS & CHALLENGES ══ -->
+    <div id="s14" class="screen">
+      <div class="mis-banner">
+        <h2>Active Missions &amp; Challenges</h2>
+        <p>Your Motivation Hub<br>Log special municipal rebates and early Marketplace</p>
+      </div>
+      <div class="mis-body">
+        <p class="mis-sec">Active Challenges</p>
+        <div class="mis-card">
+          <div class="mis-card-hdr">
+            <div class="mis-card-ico">♻️</div>
+            <div><p class="mis-card-title">Plastic-Free Week</p><p class="mis-card-sub">Log zero plastic · 3 days left</p></div>
+          </div>
+          <div class="mis-progress"><div class="mis-progress-fill" style="width:60%"></div></div>
+          <div class="mis-progress-row"><span>Progress: 60%</span><strong>Active 75%</strong></div>
+        </div>
+        <div class="mis-card">
+          <div class="mis-card-hdr">
+            <div class="mis-card-ico">📅</div>
+            <div><p class="mis-card-title">5-day Logging Streak</p><p class="mis-card-sub">Streak: 3/5 · Keep going!</p></div>
+          </div>
+          <div class="mis-progress"><div class="mis-progress-fill" style="width:60%"></div></div>
+          <div class="mis-progress-row"><span>3 of 5 days</span><strong>Active 60%</strong></div>
+        </div>
+        <div class="mis-card">
+          <div class="mis-card-hdr">
+            <div class="mis-card-ico">🌿</div>
+            <div><p class="mis-card-title">Organic Hero</p><p class="mis-card-sub">Log 10 kg organic waste · Week</p></div>
+          </div>
+          <div class="mis-progress"><div class="mis-progress-fill" style="width:40%"></div></div>
+          <div class="mis-progress-row"><span>4 of 10 kg</span><strong>Active 40%</strong></div>
+        </div>
+      </div>
+      <div class="rbnav">
+        <div class="rni" onclick="goTo(6)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><p>Home</p></div>
+        <div class="rni" onclick="goTo(8)"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><p>Log</p></div>
+        <div class="rfab" onclick="goTo(8)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="rni on" onclick="goTo(12)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5 3.19-6.98 4.8-9.14 4.8"/></svg><p>Rewards</p></div>
+        <div class="rni" onclick="goTo(17)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p>Profile</p></div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 15: GREEN PULSE STATUS ══ -->
+    <div id="s15" class="screen">
+      <div class="status-banner">
+        <h2>YOUR GREEN PULSE STATUS</h2>
+        <p>Celebrate your impact!</p>
+      </div>
+      <div class="status-body">
+        <div class="tier-wrap">
+          <div class="trophy">🏆</div>
+          <p class="tier-name">Bronze Tier</p>
+          <p class="tier-sub">You are now a Green Warrior! Continue logging waste to unlock Silver Tier.</p>
+          <div class="tier-progress"><div class="tier-progress-fill" style="width:45%"></div></div>
+          <div class="tier-progress-label"><span id="tier-pts-cur">0 pts</span><span>500 pts for Silver</span></div>
+          <div class="tier-badge">
+            <span class="tier-badge-icon">🥉</span>
+            <div class="tier-badge-text"><p>Achievement: Bronze Tier</p><span>Unlocked by logging your first entries</span></div>
+          </div>
+          <button class="tier-next-btn" onclick="goTo(8)">View Benefits &amp; Unlock Silver Tier →</button>
+        </div>
+      </div>
+      <div class="rbnav">
+        <div class="rni" onclick="goTo(6)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><p>Home</p></div>
+        <div class="rni" onclick="goTo(8)"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><p>Log</p></div>
+        <div class="rfab" onclick="goTo(8)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="rni on" onclick="goTo(12)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5 3.19-6.98 4.8-9.14 4.8"/></svg><p>Rewards</p></div>
+        <div class="rni" onclick="goTo(17)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p>Profile</p></div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 16: COMMUNITY LEADERBOARD ══ -->
+    <div id="s16" class="screen">
+      <div class="lb-banner">
+        <h2>Community Leaderboards</h2>
+        <p>See how your Ward ranks!</p>
+      </div>
+      <div class="lb-body">
+        <p class="lb-sec">Neighbourhood Leaderboard</p>
+        <div class="lb-avg">
+          <span>Ward Average: 1,650 pts</span>
+        </div>
+        <div class="lb-row">
+          <div class="lb-rank gold">1</div>
+          <div class="lb-avatar">P</div>
+          <div class="lb-name">Parkurst</div>
+          <span class="lb-pct">2,840 pts</span>
+        </div>
+        <div class="lb-row">
+          <div class="lb-rank silver">2</div>
+          <div class="lb-avatar" style="background:linear-gradient(135deg,#1a7533,#72dd97);">R</div>
+          <div class="lb-name">Rosebank</div>
+          <span class="lb-pct">2,115 pts</span>
+        </div>
+        <div class="lb-row">
+          <div class="lb-rank bronze">3</div>
+          <div class="lb-avatar" style="background:linear-gradient(135deg,#7b5ea7,#a78bda);">H</div>
+          <div class="lb-name">Hydeparc</div>
+          <span class="lb-pct">1,973 pts</span>
+        </div>
+        <div class="lb-row me">
+          <div class="lb-rank" style="color:var(--g600);">—</div>
+          <div class="lb-avatar" style="background:linear-gradient(135deg,var(--g700),var(--g400));" id="lb-my-avatar">?</div>
+          <div class="lb-name" id="lb-my-name">You</div>
+          <span class="lb-pct" id="lb-my-pts">0 pts</span>
+        </div>
+        <button class="lb-full-btn">View Full Municipal Rankings</button>
+        <button class="lb-quick-log" onclick="goTo(8)">+ Quick Log</button>
+      </div>
+      <div class="rbnav">
+        <div class="rni" onclick="goTo(6)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><p>Home</p></div>
+        <div class="rni" onclick="goTo(8)"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><p>Log</p></div>
+        <div class="rfab" onclick="goTo(8)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="rni on" onclick="goTo(12)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5 3.19-6.98 4.8-9.14 4.8"/></svg><p>Rewards</p></div>
+        <div class="rni" onclick="goTo(17)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p>Profile</p></div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 17: USER PROFILE ══ -->
+    <div id="s17" class="screen">
+      <div class="adm-hero" style="padding-bottom:18px;">
+        <div class="adm-back" onclick="goTo(6)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <h2>PROFILE</h2>
+      </div>
+      <div class="adm-body">
+        <div class="pf-logo">
+          <svg width="44" height="44" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" fill="none" stroke="#3dc76b" stroke-width="2" opacity="0.5"/><circle cx="30" cy="30" r="6" fill="#3dc76b"/></svg>
+        </div>
+        <p class="pf-title">YOUR GREEN PULSE<br>PROFILE</p>
+        <p class="pf-sub">Manage your account, preferences and collection settings</p>
+        <div class="pf-list">
+          <div class="pf-row" onclick="goTo(18)"><span>Account Info</span><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="pf-row" onclick="goTo(20)"><span>Locations</span><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="pf-row" onclick="goTo(19)"><span>Notifications</span><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="pf-row"><span>Comfort &amp; Preferences</span><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="pf-row danger" onclick="goTo(2)"><span>Sign Out</span><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+      <div class="rbnav">
+        <div class="rni" onclick="goTo(6)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><p>Home</p></div>
+        <div class="rni" onclick="goTo(8)"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><p>Log</p></div>
+        <div class="rfab" onclick="goTo(8)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="rni" onclick="goTo(12)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/></svg><p>Rewards</p></div>
+        <div class="rni on"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p>Profile</p></div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 18: ACCOUNT INFO ══ -->
+    <div id="s18" class="screen">
+      <div class="adm-hero">
+        <div class="adm-back" onclick="goTo(17)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <h2>Account<br>Info</h2>
+      </div>
+      <div class="adm-body">
+        <div class="acc-avatar" id="acc-initial">S</div>
+        <p class="acc-name" id="acc-name">Samantha Jenkins</p>
+
+        <div class="acc-field">
+          <div class="acc-field-ico"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="acc-field-body"><span class="acc-field-lbl">Full Name</span><span class="acc-field-val" id="acc-user">Samantha Jenkins</span></div>
+        </div>
+        <div class="acc-field">
+          <div class="acc-field-ico"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22 6 12 13 2 6"/></svg></div>
+          <div class="acc-field-body"><span class="acc-field-lbl">Email Address</span><span class="acc-field-val" id="acc-email">samantha@greenpulse.app</span></div>
+          <span class="acc-field-tag">VERIFIED</span>
+        </div>
+        <div class="acc-field">
+          <div class="acc-field-ico"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+          <div class="acc-field-body"><span class="acc-field-lbl">Password</span><span class="acc-field-val">••••••••</span></div>
+        </div>
+        <div class="acc-field">
+          <div class="acc-field-ico"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="acc-field-body"><span class="acc-field-lbl">Household Members</span><span class="acc-field-val" id="acc-hh">2 people</span></div>
+        </div>
+        <div class="acc-field">
+          <div class="acc-field-ico"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div class="acc-field-body"><span class="acc-field-lbl">Province</span><span class="acc-field-val" id="acc-prov">—</span></div>
+        </div>
+        <div class="acc-field">
+          <div class="acc-field-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="acc-field-body"><span class="acc-field-lbl">Collection Frequency</span><span class="acc-field-val" id="acc-freq">Weekly</span></div>
+        </div>
+        <div class="acc-field">
+          <div class="acc-field-ico"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
+          <div class="acc-field-body"><span class="acc-field-lbl">POPIA Consent</span><span class="acc-field-val">Accepted · 2026</span></div>
+        </div>
+
+        <button class="adm-cta" onclick="goTo(17)">UPDATE DETAILS</button>
+      </div>
+      <div class="rbnav">
+        <div class="rni" onclick="goTo(6)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><p>Home</p></div>
+        <div class="rni" onclick="goTo(8)"><svg viewBox="0 0 24 24"><path d="M12 20h9"/></svg><p>Log</p></div>
+        <div class="rfab" onclick="goTo(8)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="rni" onclick="goTo(12)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/></svg><p>Rewards</p></div>
+        <div class="rni on" onclick="goTo(17)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p>Profile</p></div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 19: NOTIFICATIONS ══ -->
+    <div id="s19" class="screen">
+      <div class="adm-hero">
+        <div class="adm-back" onclick="goTo(17)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <h2>Notifications</h2>
+      </div>
+      <div class="adm-body">
+        <div class="nt-card">
+          <div class="nt-ico">🗑️</div>
+          <div class="nt-body"><p class="nt-title">Waste Logging Reminders</p><p class="nt-desc">Remind me on collection day</p></div>
+          <div class="nt-toggle" onclick="this.classList.toggle('off')"></div>
+        </div>
+        <div class="nt-card">
+          <div class="nt-ico">📊</div>
+          <div class="nt-body"><p class="nt-title">Impact Progress Reports</p><p class="nt-desc">Receive weekly summaries</p></div>
+          <div class="nt-toggle" onclick="this.classList.toggle('off')"></div>
+        </div>
+        <div class="nt-card">
+          <div class="nt-ico">🏆</div>
+          <div class="nt-body"><p class="nt-title">Community Challenge Alerts</p><p class="nt-desc">New ward challenges</p></div>
+          <div class="nt-toggle off" onclick="this.classList.toggle('off')"></div>
+        </div>
+        <div class="nt-card">
+          <div class="nt-ico">🎁</div>
+          <div class="nt-body"><p class="nt-title">Reward Notifications</p><p class="nt-desc">Vouchers &amp; redeems</p></div>
+          <div class="nt-toggle" onclick="this.classList.toggle('off')"></div>
+        </div>
+
+        <p class="nt-times-lbl">Notification Times</p>
+        <select class="nt-times-select">
+          <option>7:00 AM</option>
+          <option>12:00 PM</option>
+          <option>6:00 PM</option>
+          <option>9:00 PM</option>
+        </select>
+      </div>
+      <div class="rbnav">
+        <div class="rni" onclick="goTo(6)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><p>Home</p></div>
+        <div class="rni" onclick="goTo(8)"><svg viewBox="0 0 24 24"><path d="M12 20h9"/></svg><p>Log</p></div>
+        <div class="rfab" onclick="goTo(8)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="rni" onclick="goTo(12)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/></svg><p>Rewards</p></div>
+        <div class="rni on" onclick="goTo(17)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p>Profile</p></div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN 20: LOCATIONS ══ -->
+    <div id="s20" class="screen">
+      <div class="adm-hero">
+        <div class="adm-back" onclick="goTo(17)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <h2>Locations</h2>
+      </div>
+      <div class="adm-body">
+        <div class="loc-card">
+          <p class="loc-lbl">Current Ward</p>
+          <p class="loc-val" id="loc-ward">Ward 117 · Rosebank</p>
+          <div class="loc-map"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Map view</span></div>
+          <div class="loc-row"><small style="color:#888;font-size:11px;">Auto-detected from your address</small><span class="loc-change">Change</span></div>
+        </div>
+
+        <div class="loc-card">
+          <p class="loc-lbl">Collection Frequency</p>
+          <div class="loc-freq">
+            <div class="loc-freq-pill sel">Weekly</div>
+            <div class="loc-freq-pill">Bi-weekly</div>
+            <div class="loc-freq-pill">Monthly</div>
+          </div>
+          <p style="font-size:11px;color:#888;margin-top:8px;">Next collection: <strong style="color:var(--g700);">Tue 19 May</strong></p>
+        </div>
+
+        <div class="loc-card">
+          <p class="loc-lbl">Suburbs Covered</p>
+          <p class="loc-suburbs">Parkhurst · Rosebank · Hyde Park · Craighall · Saxonwold · Forest Town</p>
+        </div>
+
+        <button class="adm-cta" onclick="goTo(17)">SET COLLECTION DAY</button>
+      </div>
+      <div class="rbnav">
+        <div class="rni" onclick="goTo(6)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><p>Home</p></div>
+        <div class="rni" onclick="goTo(8)"><svg viewBox="0 0 24 24"><path d="M12 20h9"/></svg><p>Log</p></div>
+        <div class="rfab" onclick="goTo(8)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="rni" onclick="goTo(12)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/></svg><p>Rewards</p></div>
+        <div class="rni on" onclick="goTo(17)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p>Profile</p></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────
+const ST = { cur:1, name:'', hh:2, province:'', freq:'weekly',
+             wasteCategory:'', wasteIcon:'', wasteFactor:0, wasteSize:'', wasteKg:0,
+             entries:[], totalCO2:0, totalPts:0 };
+const ORDER = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
+
+// CO2 factors (kg CO2 per kg waste) from GreenPulse_Emission_Constants
+const CO2_FACTORS = {
+  'Plastic':      2.0,
+  'Mixed (MSW)':  1.2,
+  'Organic':      0.6,
+  'Paper':        0.7
+};
+
+const PMOD = {
+  'Gauteng':1.0,'Mpumalanga':1.35,'Limpopo':0.95,
+  'KwaZulu-Natal':0.88,'Western Cape':0.78,'Eastern Cape':0.82,
+  'Free State':0.92,'Northern Cape':0.85,'North West':1.10
+};
+const PDESC = {
+  'Gauteng':'Average Highveld grid intensity',
+  'Mpumalanga':'High — major coal belt region',
+  'Limpopo':'Moderate — mixed energy mix',
+  'KwaZulu-Natal':'Below avg — coastal diversification',
+  'Western Cape':'Lowest — renewable-heavy grid',
+  'Eastern Cape':'Below avg — wind corridor',
+  'Free State':'Moderate — agricultural region',
+  'Northern Cape':'Below avg — solar-rich province',
+  'North West':'Above avg — mining &amp; industry'
+};
+
+function calcCO2() {
+  const mod = PMOD[ST.province] || 1.0;
+  return +(0.62 * ST.hh * mod).toFixed(2);
+}
+
+// ── NAVIGATION ────────────────────────────────────
+function goTo(n) {
+  if (n === ST.cur) return;
+  const fwd = ORDER.indexOf(n) > ORDER.indexOf(ST.cur);
+  const from = document.getElementById('s' + ST.cur);
+  const to   = document.getElementById('s' + n);
+
+  from.classList.remove('visible');
+  from.classList.add(fwd ? 'sol' : 'sor');
+  to.classList.add(fwd ? 'sir' : 'sil', 'visible');
+
+  from.addEventListener('animationend', () => from.classList.remove('sol','sor'), {once:true});
+  to.addEventListener('animationend',   () => to.classList.remove('sir','sil'),   {once:true});
+
+  ST.cur = n;
+  document.querySelectorAll('.snav button').forEach((b,i) => b.classList.toggle('active', i+1===n));
+
+  if (n===5)  updateCarbon();
+  if (n===6||n===7) { updateGreeting(); if(n===6) updateSummary(); }
+  if (n>=12)  updateRewards();
+  if (n>=17) {
+    const nm = ST.fullName || ST.name || 'Samantha Jenkins';
+    const setTxt = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+    setTxt('acc-initial', nm.charAt(0).toUpperCase());
+    setTxt('acc-name', nm);
+    setTxt('acc-user', nm);
+    setTxt('acc-email', ST.email || 'samantha@greenpulse.app');
+    setTxt('acc-hh', (ST.hh||1) + ' ' + ((ST.hh||1)===1?'person':'people'));
+    setTxt('acc-prov', ST.province || '—');
+    const freqMap = { weekly:'Weekly', biweekly:'Bi-weekly', other:'Other' };
+    setTxt('acc-freq', freqMap[ST.freq] || 'Weekly');
+  }
+  if (n===9)  prepQtyScreen();
+}
+
+// ── REGISTER ─────────────────────────────────────
+function doRegister() {
+  const ne = document.getElementById('reg-name');
+  const ee = document.getElementById('reg-email');
+  const tc = document.getElementById('tc');
+  const tw = document.getElementById('terms-wrap');
+
+  let ok = true;
+  if (!ne.value.trim()) { ne.style.borderColor='#e24b4a'; ne.classList.add('err-shake'); setTimeout(()=>{ne.style.borderColor='';ne.classList.remove('err-shake');},800); ne.focus(); ok=false; }
+  if (!ee.value.trim()) { ee.style.borderColor='#e24b4a'; ee.classList.add('err-shake'); setTimeout(()=>{ee.style.borderColor='';ee.classList.remove('err-shake');},800); if(ok)ee.focus(); ok=false; }
+  if (!tc.checked) { tw.style.borderColor='#e24b4a'; tw.classList.add('err-shake'); setTimeout(()=>{tw.style.borderColor='#c3e8d0';tw.classList.remove('err-shake');},900); ok=false; }
+
+  if (!ok) return;
+  ST.fullName = ne.value.trim();
+  ST.email    = ee.value.trim();
+  ST.name     = ST.fullName.split(' ')[0];
+  goTo(4);
+}
+
+// ── HOUSEHOLD ────────────────────────────────────
+function chg(d) {
+  ST.hh = Math.min(12, Math.max(1, ST.hh + d));
+  document.getElementById('hc').textContent = ST.hh;
+}
+
+// ── PROVINCE ─────────────────────────────────────
+function onProv() {
+  ST.province = document.getElementById('prov').value;
+  const noteEl = document.getElementById('pnote');
+  const txtEl  = document.getElementById('ptxt');
+  if (ST.province) {
+    noteEl.style.display = 'flex';
+    txtEl.innerHTML = '<strong>' + ST.province + '</strong> · ' + (PDESC[ST.province]||'');
+  } else {
+    noteEl.style.display = 'none';
+  }
+}
+
+// ── FREQ TOGGLE ──────────────────────────────────
+function selTog(el, v) {
+  document.querySelectorAll('.to').forEach(t => t.classList.remove('sel'));
+  el.classList.add('sel');
+  ST.freq = v;
+}
+
+// ── CARBON SCREEN ────────────────────────────────
+function updateCarbon() {
+  const perPerson = 7.19;
+  const t = perPerson * (ST.hh || 1);
+  const circ = 2 * Math.PI * 75; // r=75
+  const pct  = Math.min(Math.max((t - 0.4) / 7.0, 0.04), 0.96);
+  const arc  = circ * 0.06 + pct * circ * 0.78;
+
+  document.getElementById('garc').setAttribute('stroke-dasharray', arc.toFixed(1) + ' ' + circ.toFixed(1));
+  document.getElementById('gnum').textContent = t.toFixed(2);
+
+  const km    = Math.round(t * 1000);
+  const trees = Math.round(t * 36);
+  const diff  = Math.round(Math.abs(7.8 - t) / 7.8 * 100);
+  const dir   = t < 7.8 ? diff + '% below' : diff + '% above';
+
+  document.getElementById('ekm').textContent   = km.toLocaleString('en-ZA') + ' km driving';
+  document.getElementById('etree').textContent = trees + ' trees to offset';
+  document.getElementById('eavg').textContent  = dir + ' SA avg of 7.8 t/yr';
+
+  const prov = ST.province || 'your area';
+  document.getElementById('s5-sub').textContent =
+    'For ' + ST.hh + ' ' + (ST.hh===1?'person':'people') + ' in ' + prov + '.';
+}
+
+// ── LOGIN ─────────────────────────────────────────
+function doLogin() {
+  const ne = document.getElementById('login-name');
+  if (!ne.value.trim()) {
+    ne.style.borderColor='rgba(255,100,100,0.7)';
+    ne.classList.add('err-shake');
+    setTimeout(()=>{ne.style.borderColor='';ne.classList.remove('err-shake');},800);
+    ne.focus(); return;
+  }
+  ST.name = ne.value.trim().split(' ')[0];
+  goTo(6);
+}
+
+// ── GREETING ─────────────────────────────────────
+function updateGreeting() {
+  const h = new Date().getHours();
+  const g = h<12 ? 'Good morning' : h<17 ? 'Good afternoon' : 'Good evening';
+  const display = ST.name ? g + ', ' + ST.name + ' 👋' : g + ' 👋';
+  ['hn6','hn7'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=display; });
+}
+
+// ── EMISSION SUMMARY ──────────────────────────────
+const CAT_META = {
+  'Plastic':     { icon:'♻️', color:'rgba(61,199,107,0.13)' },
+  'Mixed (MSW)': { icon:'🗑️', color:'rgba(255,193,7,0.11)'  },
+  'Organic':     { icon:'🌿', color:'rgba(100,200,120,0.13)' },
+  'Paper':       { icon:'📄', color:'rgba(100,160,255,0.11)' }
+};
+
+function updateSummary() {
+  const total = ST.totalCO2;
+  const pts   = ST.totalPts;
+  const count = ST.entries.length;
+
+  // arc gauge (max scale ~200 kg)
+  const circ = 2 * Math.PI * 31;
+  const pct  = Math.min(total / 200, 1);
+  const arc  = document.getElementById('sum-arc');
+  if (arc) arc.setAttribute('stroke-dasharray', (circ * pct).toFixed(1) + ' ' + circ.toFixed(1));
+
+  const totalEl = document.getElementById('sum-total');
+  if (totalEl) totalEl.textContent = total.toFixed(2);
+
+  const tagEl = document.getElementById('sum-entries-tag');
+  if (tagEl) tagEl.textContent = count + (count===1?' entry':' entries') + ' logged';
+
+  const ptsEl = document.getElementById('sum-pts-line');
+  if (ptsEl) ptsEl.textContent = '🌱 ' + pts + ' Green Points earned';
+
+  // per-category totals
+  const cats = {};
+  ST.entries.forEach(e => {
+    if (!cats[e.category]) cats[e.category] = 0;
+    cats[e.category] += e.co2;
+  });
+
+  const bdEl = document.getElementById('sum-breakdown');
+  if (bdEl) {
+    if (Object.keys(cats).length === 0) {
+      bdEl.innerHTML = '<div class="sc" style="grid-column:1/-1;text-align:center;padding:20px;"><p style="color:rgba(255,255,255,0.3);font-size:12px;">No entries yet.<br>Tap + to log your first waste entry.</p></div>';
+    } else {
+      bdEl.innerHTML = Object.entries(cats).map(([cat, co2]) => {
+        const m = CAT_META[cat] || { icon:'📦', color:'rgba(255,255,255,0.08)' };
+        return `<div class="sc"><div class="si">${m.icon}</div><p class="sn">${co2.toFixed(1)} kg</p><p class="sl">${cat}</p></div>`;
+      }).join('');
+    }
+  }
+
+  // recent history list
+  const hw = document.getElementById('sum-history-wrap');
+  const hl = document.getElementById('sum-history');
+  if (hw && hl) {
+    if (ST.entries.length === 0) {
+      hw.style.display = 'none';
+    } else {
+      hw.style.display = 'block';
+      const recent = [...ST.entries].reverse().slice(0, 5);
+      hl.innerHTML = recent.map(e => {
+        const m = CAT_META[e.category] || { icon:'📦', color:'rgba(255,255,255,0.08)' };
+        return `<div class="trow">
+          <div class="tico" style="background:${m.color}">${m.icon}</div>
+          <div class="ttxt"><p>${e.category} · ${e.size}</p><span>${e.kg} kg · ${e.co2.toFixed(2)} kg CO₂e</span></div>
+          <span class="tpts">+${e.pts} pts</span>
+        </div>`;
+      }).join('');
+    }
+  }
+}
+
+// ── WASTE CATEGORY SELECT ─────────────────────────
+function selCat(el, name, icon, factor) {
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  ST.wasteCategory = name;
+  ST.wasteIcon     = icon;
+  ST.wasteFactor   = factor;
+  // reset quantity
+  ST.wasteSize = '';
+  ST.wasteKg   = 0;
+  document.getElementById('cat-next-btn').classList.add('ready');
+}
+
+// ── WASTE QUANTITY SELECT ─────────────────────────
+function selQty(el, size, kg) {
+  document.querySelectorAll('.qty-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  ST.wasteSize = size;
+  ST.wasteKg   = kg;
+  const co2 = +(kg * ST.wasteFactor).toFixed(2);
+  document.getElementById('qty-co2-preview').textContent = co2.toLocaleString('en-ZA') + ' kg CO₂e';
+  document.getElementById('qty-next-btn').classList.add('ready');
+}
+
+// ── POPULATE QUANTITY SCREEN ──────────────────────
+function prepQtyScreen() {
+  document.getElementById('qty-cat-label').textContent = ST.wasteIcon + ' ' + ST.wasteCategory;
+  // reset quantity selection
+  document.querySelectorAll('.qty-opt').forEach(o => o.classList.remove('sel'));
+  document.getElementById('qty-co2-preview').textContent = '— kg';
+  document.getElementById('qty-next-btn').classList.remove('ready');
+  ST.wasteSize = ''; ST.wasteKg = 0;
+}
+
+// ── SUBMIT ENTRY ──────────────────────────────────
+function submitEntry() {
+  goTo(10);
+}
+
+// ── SHOW RESULT ───────────────────────────────────
+function showResult() {
+  const co2 = +(ST.wasteKg * ST.wasteFactor).toFixed(2);
+  const pts  = Math.max(5, Math.round(co2 * 1.5));
+
+  // save to entries log
+  ST.entries.push({ category: ST.wasteCategory, icon: ST.wasteIcon,
+                    factor: ST.wasteFactor, size: ST.wasteSize,
+                    kg: ST.wasteKg, co2, pts });
+  ST.totalCO2 = +((ST.totalCO2 + co2).toFixed(2));
+  ST.totalPts += pts;
+
+  const circ = 2 * Math.PI * 62;
+  const pct  = Math.min(Math.max(co2 / 200, 0.04), 0.96);
+  const arc  = circ * 0.05 + pct * circ * 0.8;
+
+  document.getElementById('res-arc').setAttribute('stroke-dasharray', arc.toFixed(1) + ' ' + circ.toFixed(1));
+  document.getElementById('res-num').textContent    = co2.toFixed(2);
+  document.getElementById('res-sub').textContent    = ST.wasteCategory + ' · ' + ST.wasteSize + ' batch';
+  document.getElementById('res-pts').textContent    = '+' + pts + ' Green Points';
+  document.getElementById('rd-type').textContent    = ST.wasteCategory;
+  document.getElementById('rd-qty').textContent     = ST.wasteKg + ' kg (' + ST.wasteSize + ')';
+  document.getElementById('rd-factor').textContent  = ST.wasteFactor + ' kg CO₂/kg';
+  document.getElementById('rd-total').textContent   = co2.toFixed(2) + ' kg CO₂e';
+
+  goTo(11);
+}
+
+// ── REWARDS SCREENS ──────────────────────────────
+function updateRewards() {
+  const pts  = ST.totalPts;
+  const name = ST.name || 'there';
+  const initial = name.charAt(0).toUpperCase();
+
+  // S12 My Rewards
+  const rwg = document.getElementById('rw-greeting');
+  if (rwg) rwg.textContent = 'Hello, ' + name + '!';
+  const rwp = document.getElementById('rw-pts-display');
+  if (rwp) rwp.textContent = pts.toLocaleString('en-ZA');
+  const rwpb = document.getElementById('rw-pts-bar-val');
+  if (rwpb) rwpb.textContent = pts.toLocaleString('en-ZA') + ' pts';
+
+  // S13 Marketplace
+  const mkp = document.getElementById('mkt-pts');
+  if (mkp) mkp.textContent = 'Points Balance: ' + pts.toLocaleString('en-ZA');
+
+  // S15 Tier status — Bronze < 500, Silver 500–1999, Gold 2000+
+  const tierCur = document.getElementById('tier-pts-cur');
+  if (tierCur) tierCur.textContent = pts + ' pts';
+  const tierFill = document.querySelector('.tier-progress-fill');
+  if (tierFill) {
+    if (pts < 500)       tierFill.style.width = Math.round(pts/500*100) + '%';
+    else if (pts < 2000) tierFill.style.width = Math.round((pts-500)/1500*100) + '%';
+    else                 tierFill.style.width = '100%';
+  }
+
+  // S16 Leaderboard — user row
+  const lbName = document.getElementById('lb-my-name');
+  const lbAva  = document.getElementById('lb-my-avatar');
+  const lbPts  = document.getElementById('lb-my-pts');
+  if (lbName) lbName.textContent = name;
+  if (lbAva)  lbAva.textContent  = initial;
+  if (lbPts)  lbPts.textContent  = pts + ' pts';
+}
+
+// init — no name known yet, greeting will update when navigating to screen 6/7
+</script>
+</body>
+</html>
